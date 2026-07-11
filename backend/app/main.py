@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.db.session import Base, engine
+from app.models import meeting  
 from app.api import health
 
 settings = get_settings()
