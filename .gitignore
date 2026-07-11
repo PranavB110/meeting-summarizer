@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Runtime data
+storage/audio/*
+storage/transcripts/*
+!storage/audio/.gitkeep
+!storage/transcripts/.gitkeep
+*.db
+*.sqlite3
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Test
+.pytest_cache/
+.coverage
