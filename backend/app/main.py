@@ -8,6 +8,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from app.core.config import get_settings
 from app.db.session import Base, engine
@@ -38,6 +39,15 @@ app.include_router(health.router, prefix="/api")
 app.include_router(meetings.router, prefix="/api")
 
 
-@app.get("/")
+FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend" / "templates"
+
+
+@app.get("/", response_class=HTMLResponse)
 def root():
+    html_path = FRONTEND_DIR / "index.html"
+    return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+
+
+@app.get("/api")
+def api_info():
     return {"message": "Meeting Summarizer API is running. See /docs for API documentation."}

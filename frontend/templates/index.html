@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meeting Summarizer</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #171a21;
+    --border: #2a2e38;
+    --text: #e8e9ec;
+    --muted: #9aa0ac;
+    --accent: #5b8def;
+    --success: #3ecf8e;
+    --warn: #f5a623;
+    --error: #f2545b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 40px 20px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); margin-bottom: 32px; font-size: 0.95rem; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .dropzone:hover, .dropzone.dragover { border-color: var(--accent); }
+  .dropzone p { margin: 8px 0 0; color: var(--muted); font-size: 0.9rem; }
+  input[type="file"] { display: none; }
+
+  button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin-top: 16px;
+  }
+  button:disabled { background: var(--border); cursor: not-allowed; }
+
+  .status-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+  .status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  .status-uploaded, .status-transcribing, .status-summarizing { background: rgba(245,166,35,0.15); color: var(--warn); }
+  .status-completed { background: rgba(62,207,142,0.15); color: var(--success); }
+  .status-failed { background: rgba(242,84,91,0.15); color: var(--error); }
+
+  .section-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0 0 8px; }
+  .transcript-box { white-space: pre-wrap; font-size: 0.9rem; line-height: 1.6; color: var(--text); max-height: 200px; overflow-y: auto; }
+  ul.action-list { padding-left: 20px; margin: 0; }
+  ul.action-list li { margin-bottom: 6px; font-size: 0.92rem; }
+
+  .hidden { display: none; }
+  .spinner {
+    border: 3px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 50%;
+    width: 18px; height: 18px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Meeting Summarizer</h1>
+  <p class="subtitle">Upload meeting audio to get a transcript, summary, and action items.</p>
+
+  <div class="card">
+    <div class="dropzone" id="dropzone">
+      <div id="dropzoneText">
+        <strong>Click to select an audio file</strong>
+        <p>MP3, WAV, M4A, MP4, WEBM, OGG</p>
+      </div>
+      <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.mp4,.webm,.ogg">
+    </div>
+    <button id="uploadBtn" disabled>Upload &amp; Process</button>
+
+    <div class="status-row hidden" id="statusRow">
+      <div class="spinner" id="spinner"></div>
+      <span class="status-badge" id="statusBadge"></span>
+      <span id="statusText" style="color: var(--muted); font-size: 0.85rem;"></span>
+    </div>
+  </div>
+
+  <div class="card hidden" id="resultsCard">
+    <div style="margin-bottom: 20px;">
+      <p class="section-title">Summary</p>
+      <p id="summaryText"></p>
+    </div>
+    <div style="margin-bottom: 20px;">
+      <p class="section-title">Key Decisions</p>
+      <ul class="action-list" id="decisionsList"></ul>
+    </div>
+    <div style="margin-bottom: 20px;">
+      <p class="section-title">Action Items</p>
+      <ul class="action-list" id="actionsList"></ul>
+    </div>
+    <div>
+      <p class="section-title">Full Transcript</p>
+      <div class="transcript-box" id="transcriptText"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+const statusRow = document.getElementById('statusRow');
+const statusBadge = document.getElementById('statusBadge');
+const statusText = document.getElementById('statusText');
+const spinner = document.getElementById('spinner');
+const resultsCard = document.getElementById('resultsCard');
+
+let selectedFile = null;
+let pollTimer = null;
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) {
+    fileInput.files = e.dataTransfer.files;
+    handleFileSelect();
+  }
+});
+fileInput.addEventListener('change', handleFileSelect);
+
+function handleFileSelect() {
+  if (fileInput.files.length) {
+    selectedFile = fileInput.files[0];
+    document.getElementById('dropzoneText').innerHTML =
+      `<strong>${selectedFile.name}</strong><p>${(selectedFile.size / 1024 / 1024).toFixed(2)} MB — click to change</p>`;
+    uploadBtn.disabled = false;
+  }
+}
+
+uploadBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  uploadBtn.disabled = true;
+  resultsCard.classList.add('hidden');
+  statusRow.classList.remove('hidden');
+  setStatus('uploaded', 'Uploading...');
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+
+  try {
+    const res = await fetch('/api/meetings', { method: 'POST', body: formData });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Upload failed');
+    }
+    const data = await res.json();
+    pollStatus(data.id);
+  } catch (err) {
+    setStatus('failed', err.message);
+    uploadBtn.disabled = false;
+  }
+});
+
+function setStatus(status, text) {
+  statusBadge.textContent = status;
+  statusBadge.className = 'status-badge status-' + status;
+  statusText.textContent = text;
+  spinner.style.display = (status === 'completed' || status === 'failed') ? 'none' : 'block';
+}
+
+function pollStatus(meetingId) {
+  pollTimer = setInterval(async () => {
+    const res = await fetch(`/api/meetings/${meetingId}`);
+    const data = await res.json();
+    setStatus(data.status, `Meeting ID: ${meetingId.slice(0, 8)}...`);
+
+    if (data.status === 'completed') {
+      clearInterval(pollTimer);
+      uploadBtn.disabled = false;
+      showResults(data);
+    } else if (data.status === 'failed') {
+      clearInterval(pollTimer);
+      uploadBtn.disabled = false;
+      setStatus('failed', data.error_message || 'Processing failed');
+    }
+  }, 2000);
+}
+
+function showResults(data) {
+  document.getElementById('summaryText').textContent = data.summary || '—';
+  document.getElementById('transcriptText').textContent = data.transcript || '—';
+
+  const decisionsList = document.getElementById('decisionsList');
+  decisionsList.innerHTML = (data.key_decisions || []).map(d => `<li>${escapeHtml(d)}</li>`).join('') || '<li>None identified</li>';
+
+  const actionsList = document.getElementById('actionsList');
+  actionsList.innerHTML = (data.action_items || []).map(a => `<li>${escapeHtml(a)}</li>`).join('') || '<li>None identified</li>';
+
+  resultsCard.classList.remove('hidden');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
