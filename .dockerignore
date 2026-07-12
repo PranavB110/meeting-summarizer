@@ -1,0 +1,13 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.env
+storage/audio/*
+storage/transcripts/*
+!storage/audio/.gitkeep
+!storage/transcripts/.gitkeep
+*.db
+.pytest_cache/
+backend/test_*.py
