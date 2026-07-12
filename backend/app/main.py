@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.db.session import Base, engine
 from app.models import meeting  
-from app.api import health
+from app.api import health, meetings
 
 settings = get_settings()
 
@@ -35,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router, prefix="/api")
+app.include_router(meetings.router, prefix="/api")
 
 
 @app.get("/")
