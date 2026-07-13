@@ -43,6 +43,7 @@ No manual note-taking. No re-listening to recordings to find who agreed to do wh
 - ✅ **Automated tests + CI** — every push tested via GitHub Actions
 
 ## 🏗️ Architecture
+```
 
 Web UI / REST client
         |
@@ -60,6 +61,7 @@ Web UI / REST client
         |
         v
    SQLite  (stores transcript, summary, status, metadata)
+```   
 
 Processing runs as a **background task** — uploads return instantly with a meeting ID, and the client polls for status/results. The API stays responsive no matter how long transcription takes.
 
@@ -87,6 +89,7 @@ Both ASR and LLM sit behind an abstract provider interface with a config-driven 
 | Containerization | Docker |
 
 ## 📂 Project Structure
+```
 meeting-summarizer/
 |-- backend/
 |   |-- app/
@@ -110,6 +113,7 @@ meeting-summarizer/
 |   `-- workflows/
 |       `-- ci.yml        GitHub Actions CI
 `-- .env.example
+```
 ## 🚀 Getting Started
 
 ### Prerequisites
