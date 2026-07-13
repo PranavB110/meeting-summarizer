@@ -44,18 +44,22 @@ No manual note-taking. No re-listening to recordings to find who agreed to do wh
 
 ## 🏗️ Architecture
 
-┌──────────────┐      ┌─────────────┐      ┌────────────────────┐      ┌───────────────┐
-│  Web UI /    │─────▶│   FastAPI   │─────▶│    ASR Provider   │─────▶│  LLM Provider │
-│  REST client │      │   Backend   │      │  (faster-whisper)  │      │    (Groq)     │
-└──────────────┘      └──────┬──────┘      └────────────────────┘      └───────┬───────┘
-│                                                  │
-▼                                                  ▼
-┌──────────────┐                                  ┌──────────────────┐
-│    SQLite     │◀────────────────────────────────│  Structured JSON │
-│  (metadata,   │                                 │  summary + actions│
-│  transcript,  │                                 └──────────────────┘
-│   summary)    │
-└──────────────┘
+Web UI / REST client
+        |
+        v
+   FastAPI Backend
+        |
+        v
+   ASR Provider  (faster-whisper)
+        |
+        v
+   LLM Provider  (Groq)
+        |
+        v
+  Structured JSON (summary, key_decisions, action_items)
+        |
+        v
+   SQLite  (stores transcript, summary, status, metadata)
 
 Processing runs as a **background task** — uploads return instantly with a meeting ID, and the client polls for status/results. The API stays responsive no matter how long transcription takes.
 
@@ -84,26 +88,28 @@ Both ASR and LLM sit behind an abstract provider interface with a config-driven 
 
 ## 📂 Project Structure
 meeting-summarizer/
-├── backend/
-│   ├── app/
-│   │   ├── api/            # FastAPI route handlers
-│   │   ├── core/           # Configuration (pydantic-settings)
-│   │   ├── db/              # SQLAlchemy session/engine
-│   │   ├── models/          # ORM models
-│   │   ├── schemas/         # Pydantic request/response schemas
-│   │   ├── providers/
-│   │   │   ├── asr/         # ASR provider interface + implementations
-│   │   │   └── llm/         # LLM provider interface + implementations
-│   │   ├── services/        # Business logic — pipeline orchestration
-│   │   └── main.py          # App entrypoint
-│   ├── tests/                # pytest suite
-│   ├── requirements.txt
-│   └── Dockerfile
-├── frontend/templates/
-│   └── index.html            # Upload UI
-├── .github/workflows/ci.yml   # GitHub Actions CI
-└── .env.example
-
+|-- backend/
+|   |-- app/
+|   |   |-- api/          FastAPI route handlers
+|   |   |-- core/         Configuration (pydantic-settings)
+|   |   |-- db/           SQLAlchemy session/engine
+|   |   |-- models/       ORM models
+|   |   |-- schemas/      Pydantic request/response schemas
+|   |   |-- providers/
+|   |   |   |-- asr/      ASR provider interface + implementations
+|   |   |   `-- llm/      LLM provider interface + implementations
+|   |   |-- services/     Business logic - pipeline orchestration
+|   |   `-- main.py       App entrypoint
+|   |-- tests/            pytest suite
+|   |-- requirements.txt
+|   `-- Dockerfile
+|-- frontend/
+|   `-- templates/
+|       `-- index.html    Upload UI
+|-- .github/
+|   `-- workflows/
+|       `-- ci.yml        GitHub Actions CI
+`-- .env.example
 ## 🚀 Getting Started
 
 ### Prerequisites
