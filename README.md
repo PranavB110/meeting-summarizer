@@ -28,7 +28,7 @@ No manual note-taking. No re-listening to recordings to find who agreed to do wh
 
 ## 🎥 Demo
 
-> 📹 *Demo video: [link here]*
+> 📹 *Demo video: [https://drive.google.com/drive/folders/1SJYEcvPkyIu1IYXikHgTesl1r896WzhE?usp=sharing]
 
 ## ✨ Features
 
