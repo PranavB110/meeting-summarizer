@@ -32,15 +32,15 @@ No manual note-taking. No re-listening to recordings to find who agreed to do wh
 
 ## ✨ Features
 
-- 🎧 **Accurate speech-to-text** — real transcription, not a toy demo
-- 🧠 **AI-generated executive summaries** — concise, no fluff
-- ✅ **Action item extraction** — owner + deadline pulled straight from the conversation
-- 🎯 **Key decision tracking** — separated from general discussion
-- 🖥️ **Drag-and-drop web UI** — live status updates while processing
-- 🔌 **Full REST API** — usable independently of the UI, documented at `/docs`
-- ⚙️ **Config-switchable AI providers** — swap ASR/LLM engines via `.env`, zero code changes
-- 🐳 **One-command Docker deploy**
-- ✅ **Automated tests + CI** — every push tested via GitHub Actions
+- **Accurate speech-to-text** — real transcription, not a toy demo
+- **AI-generated executive summaries** — concise, no fluff
+- **Action item extraction** — owner + deadline pulled straight from the conversation
+- **Key decision tracking** — separated from general discussion
+- **Drag-and-drop web UI** — live status updates while processing
+- **Full REST API** — usable independently of the UI, documented at `/docs`
+- **Config-switchable AI providers** — swap ASR/LLM engines via `.env`, zero code changes
+- **One-command Docker deploy**
+- **Automated tests + CI** — every push tested via GitHub Actions
 
 ## 🏗️ Architecture
 ```
